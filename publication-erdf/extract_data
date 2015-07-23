@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+
+import sys
+import csv
+import zipfile
+import re
+import time
+import os
+from collections import namedtuple
+import xlwt
+#import xlutils
+
+VERSION='1.0'
+
+USAGE="""
+This tool parses the extract.zip and generates an XLS file for every productivity trace log.
+Drag&Drop an extract.zip file on the executable
+
+Cet outil lit et generate un fichier XLS pour chaque fichier de production.
+Faites glisser&deposer un fichier extract.zip sur l'executable
+"""
+
+Line = namedtuple('Line', ['date', 'time', 'nums'])
+
+def zip_find_trace(zip_path):
+    with zipfile.ZipFile(zip_path, 'r') as zip:
+        for info in zip.infolist():
+            if re.match('[\d_]+.txt', info.filename):
+                print('parsing', info.filename)
+                yield info
+            else:
+                print('skipping', info.filename)
+
+
+def parse_trace(zip_path, trace_info):
+    trace = []
+    with zipfile.ZipFile(zip_path, 'r') as zip:
+        with zip.open(trace_info, 'r') as fd:
+            for line in fd:
+                _date, _time, *_nums = re.split('\s+', line.decode('utf-8').strip())
+                info = Line(_date, _time, list(map(int, _nums)))
+                trace.append(info)
+    return trace
+
+def save_trace(workbook, sheet_name, trace):
+    ws = workbook.add_sheet(sheet_name)
+    total = 0.
+    date_format = xlwt.XFStyle()
+    date_format.num_format_str = 'dd/mm/yyyy hh:mm'
+    for i, line in enumerate(trace):
+        ws.write(i, 0, line.date + ' ' + line.time, date_format)
+        for j in range(6):
+            ws.write(i, j + 1, line.nums[j])
+        total += sum(line.nums)
+    ws.write(0, 7, "total average")
+    ws.write(0, 8, xlwt.Formula("ROUND(SUM(B1:G" + str(len(trace)) + ")/6, 0)"))
+    ws.write(0, 9, "kW")
+    print('total average', round(total/6, 0))
+
+if __name__ == '__main__':
+    print('version', VERSION)
+    print(USAGE)
+    for file in sys.argv[1:]:
+        print('analyzing', os.path.abspath(file))
+        output_xls = os.path.abspath(os.path.dirname(file))
+        output_xls = os.path.join(output_xls,  os.path.splitext(os.path.basename(file))[0] + '.xls')
+        workbook = xlwt.Workbook()
+        print('output in', output_xls)
+        for trace_info in zip_find_trace(file):
+            trace = parse_trace(file, trace_info)
+            save_trace(workbook, os.path.basename(trace_info.filename), trace)
+        workbook.save(output_xls)
+
+    input("Press Enter to continue...")
