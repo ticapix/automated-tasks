@@ -4,10 +4,7 @@ from flask import Flask
 app = Flask(__name__)
 
 
-URI_ROOT = '/publication-erdf'
-
-
-@app.route(URI_ROOT + '/process-email')
+@app.route('/process-email')
 def process_email():
     return "Hello World!"
 
