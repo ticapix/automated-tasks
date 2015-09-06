@@ -2,33 +2,24 @@ import configparser
 import os
 
 from flask import Flask
-app = Flask(__name__)
 
-
-def load_config(filepath):
-    config = configparser.ConfigParser()
-    config.read(filepath)
-    return config
-
-# https://docs.python.org/3/library/configparser.html
-config = load_config(os.path.join(os.path.dirname(__file__), 'config.ini'))
-for section in config.sections():
-    for key in config[section].keys():
-        print(section + '.' + key + ' = ' + config[section][key])
-
-@app.route('/')
-def hello_twilio():
-    return 'Hello from Flask!'
-
-a = """
-# Download the twilio-python library from http://twilio.com/docs/libraries
 from twilio.rest import TwilioRestClient
- 
-# Find these values at https://twilio.com/user/account
-account_sid = "ACXXXXXXXXXXXXXXXXX"
-auth_token = "YYYYYYYYYYYYYYYYYY"
-client = TwilioRestClient(account_sid, auth_token)
- 
-message = client.messages.create(to="+12316851234", from_="+15555555555",
-                                     body="Hello there!")
-                                     """
+
+app = Flask(__name__, static_folder = None)
+
+APP_NAME = 'sms-forwarder'
+
+config = configparser.ConfigParser()
+config.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
+
+account_sid = config['default']['twilio_account_sid']
+auth_token = config['default']['twilio_auth_token']
+
+
+@app.route('/test')
+def hello_twilio():
+    client = TwilioRestClient(account_sid, auth_token)
+    to = config['default']['forward_to_number']
+    from_ = config['default']['forward_to_number']
+    message = client.messages.create(to=to, from_=from_, body='test ok!')
+    print(message)

@@ -7,7 +7,7 @@ import importlib
 from werkzeug.wsgi import DispatcherMiddleware
 from werkzeug.serving import run_simple
 
-from flask import Flask
+from flask import Flask, jsonify, redirect, url_for
 
 
 
@@ -20,21 +20,27 @@ def list_services(rootpath):
         module_name = os.path.basename(module_path)
         yield (module_name, importlib.import_module(module_name))
 
-app_frontend = Flask(__name__)
+app_frontend = Flask(__name__, static_folder = None)
 app_frontend.debug = True
-apps_backend = [(name, module.app) for (name, module) in list_services(rootpath)]
+apps_backend = [(module, module.APP_NAME, module.app) for (name, module) in list_services(rootpath)]
 
-app = DispatcherMiddleware(app_frontend, dict(apps_backend))
+app = DispatcherMiddleware(app_frontend, dict([(app_name, app) for (_, app_name, app) in apps_backend]))
 
 
 @app_frontend.route('/')
-def hello_world():
-    return 'Hello from Flask!'
+def index():
+    return redirect(url_for('get_services'))
 
 
-@app_frontend.route('/process-email')
-def process_email():
-    return "Hello World!"
+@app_frontend.route('/services')
+def get_services():
+    services['root'] = {'module': __name__,
+                        'rules': [rule.rule for rule in app_frontend.url_map.iter_rules()]}
+    for (mod, app_name, app) in apps_backend:
+        service = {'module': mod.__name__,
+                   'rules': [rule.rule for rule in app.url_map.iter_rules()]}
+        services[app_name] = service
+    return jsonify({'services': services})
 
 if __name__ == "__main__":
     run_simple('localhost', 5000, app, use_reloader=True, use_debugger=True, use_evalex=True)

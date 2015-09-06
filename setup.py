@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
+import os
+import glob
+import pip
+import sys
 
-from distutils.core import setup
-import py2exe
+rootpath = os.path.abspath(os.path.dirname(__file__))
 
-setup(name='erdf_comptage',
-    version='1.0',
-    description='parse extract.zip and generate xls files',
-    author='Pierre Gronlier',
-    author_email='ticapix@gmail.com',
-    url='https://www.python.org/sigs/distutils-sig/',
-#    packages=['xlwt'],
-    console=['erdf_extract/main.py']
-    )
+def install_requirements(rootpath):
+    for requirements in glob.glob(os.path.join(rootpath, '*', 'requirements.txt')):
+        print(requirements)
+        with open(requirements) as fd:
+            for line in fd:
+                line = line.strip('\n\r')
+                print('installing', line)
+                ans = pip.main(['install', line])
+                if ans != 0:
+                    return ans
+
+if __name__ == '__main__':
+    if install_requirements(rootpath) != 0:
+        sys.exit(1)
