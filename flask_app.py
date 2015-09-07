@@ -12,35 +12,37 @@ from flask import Flask, jsonify, redirect, url_for
 
 
 rootpath = os.path.abspath(os.path.dirname(__file__))
-services = {}
 
-def list_services(rootpath):
+def list_application(rootpath):
     modules = glob.glob(os.path.join(rootpath, '*', '__init__.py'))
     for module_path in [os.path.dirname(module) for module in modules]:
         module_name = os.path.basename(module_path)
+        print('module_name', module_name)
         yield (module_name, importlib.import_module(module_name))
 
 app_frontend = Flask(__name__, static_folder = None)
 app_frontend.debug = True
-apps_backend = [(module, module.APP_NAME, module.app) for (name, module) in list_services(rootpath)]
-
-app = DispatcherMiddleware(app_frontend, dict([(app_name, app) for (_, app_name, app) in apps_backend]))
-
+services = [module for (_, module) in list_application(rootpath)]
+apps_backend = dict([(service.APP_NAME, service.app) for service in services])
+app = DispatcherMiddleware(app_frontend, apps_backend)
+print(app)
 
 @app_frontend.route('/')
 def index():
-    return redirect(url_for('get_services'))
+    return redirect(url_for('list_services'))
 
 
 @app_frontend.route('/services')
-def get_services():
-    services['root'] = {'module': __name__,
-                        'rules': [rule.rule for rule in app_frontend.url_map.iter_rules()]}
-    for (mod, app_name, app) in apps_backend:
-        service = {'module': mod.__name__,
-                   'rules': [rule.rule for rule in app.url_map.iter_rules()]}
-        services[app_name] = service
-    return jsonify({'services': services})
+def list_services():
+    apis = {'root': {'module': __name__,
+                     'rules': [rule.rule for rule in app_frontend.url_map.iter_rules()]}
+            }
+    for service in services:
+        info = {'module': service.__name__,
+                'rules': [rule.rule for rule in service.app.url_map.iter_rules()]}
+        apis[service.APP_NAME] = info
+    return jsonify({'services': apis})
+
 
 if __name__ == "__main__":
     run_simple('localhost', 5000, app, use_reloader=True, use_debugger=True, use_evalex=True)
