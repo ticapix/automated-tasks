@@ -1,8 +1,6 @@
 # automated-tasks
 Basic automation services for my personal use case. Reusable as sample codes.
 
-Scripts hosted on http://ticapix.pythonanywhere.com
-
 # Setup
 pyvenv-3.4 py3_env
 source py3_env/bin/activate

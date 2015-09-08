@@ -26,8 +26,13 @@ def test():
 @app.route('/fwcall', methods=['GET', 'POST'])
 def forward_call():
     resp = twiml.Response()
-    # Dial (310) 555-1212 - connect that number to the incoming caller.
     resp.dial(config['twilio']['to_number'])
-    # If the dial fails:
     resp.say("The call failed, or the remote party hung up. Goodbye.")
+    return str(resp)
+
+@app.route('/call_auth', methods=['GET', 'POST'])
+def call_auth():
+    resp = twiml.Response()
+    resp.pause(length=3)
+    resp.play(digits=config['twilio']['auth_code'])
     return str(resp)
