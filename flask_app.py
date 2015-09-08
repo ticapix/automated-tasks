@@ -3,6 +3,7 @@
 import os
 import glob
 import importlib
+import subprocess
 
 from werkzeug.wsgi import DispatcherMiddleware
 from werkzeug.serving import run_simple
@@ -52,6 +53,7 @@ def list_services():
 @app_frontend.route('/reload', methods=['GET', 'POST'])
 def reload_app():
     # TODO git pull
+    assert subprocess.call(['git', 'pull'], cwd=rootpath) == 0
     return reload_pyanywhr_app(username=config['default']['pythonanywhere_user'],
                                password=config['default']['pythonanywhere_pass'])
 
