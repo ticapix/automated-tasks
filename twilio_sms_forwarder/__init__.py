@@ -27,7 +27,7 @@ def test():
     return jsonify({'success': True})
 
 
-@app.route('/fwcall')
+@app.route('/fwcall', methods=['GET', 'POST'])
 def forward_call():
     resp = twiml.Response()
     # Dial (310) 555-1212 - connect that number to the incoming caller.
