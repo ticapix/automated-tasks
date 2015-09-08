@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 from twilio.rest import TwilioRestClient
 from twilio import twiml
@@ -32,8 +32,7 @@ def forward_call():
 
 @app.route('/call_auth', methods=['GET', 'POST'])
 def call_auth():
-    account_sid = request.values.get('AccountSid', None)
-    if account_sid != config['twilio']['account_sid']:
+    if account_sid != request.values.get('AccountSid', None):
         return str(twiml.Response())
     resp = twiml.Response()
     resp.pause(length=5)

@@ -32,4 +32,5 @@ def reload_pyanywhr_app(username=None, password=None):
     return browser.response.text
     
 if __name__ == '__main__':
-    reload_app(os.environ['USER'], os.environ['PASS'])
+    from config import config
+    reload_pyanywhr_app(config['default']['pythonanywhere_user'], config['default']['pythonanywhere_pass'])
