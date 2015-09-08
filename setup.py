@@ -7,7 +7,9 @@ import sys
 rootpath = os.path.abspath(os.path.dirname(__file__))
 
 def install_requirements(rootpath):
-    for requirements in glob.glob(os.path.join(rootpath, '*', 'requirements.txt')):
+    paths = glob.glob(os.path.join(rootpath, 'requirements.txt'))
+    paths.extend(glob.glob(os.path.join(rootpath, '*', 'requirements.txt')))
+    for requirements in paths:
         print(requirements)
         with open(requirements) as fd:
             for line in fd:
