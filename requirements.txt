@@ -1,1 +1,1 @@
-RoboBrowser=0.5.3
+RoboBrowser==0.5.3
