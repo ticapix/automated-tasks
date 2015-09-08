@@ -10,23 +10,28 @@ from werkzeug.serving import run_simple
 from flask import Flask, jsonify, redirect, url_for
 
 
-
 rootpath = os.path.abspath(os.path.dirname(__file__))
 
-def list_application(rootpath):
+def get_services(rootpath):
     modules = glob.glob(os.path.join(rootpath, '*', '__init__.py'))
     for module_path in [os.path.dirname(module) for module in modules]:
         module_name = os.path.basename(module_path)
         print('module_name', module_name)
-        yield (module_name, importlib.import_module(module_name))
+        module = importlib.import_module(module_name)
+        module.app.debug = True
+        yield (module, '/' + module.APP_NAME, module.app)
 
+# Frontend service
 app_frontend = Flask(__name__, static_folder = None)
 app_frontend.debug = True
-services = [module for (_, module) in list_application(rootpath)]
-apps_backend = dict([(service.APP_NAME, service.app) for service in services])
-app = DispatcherMiddleware(app_frontend, apps_backend)
-print(app)
 
+# Backend services
+services = list(get_services(rootpath))
+
+# application dispatcher
+app = DispatcherMiddleware(app_frontend, dict([(app_path, app) for (_, app_path, app) in services]))
+
+# routes
 @app_frontend.route('/')
 def index():
     return redirect(url_for('list_services'))
@@ -34,13 +39,13 @@ def index():
 
 @app_frontend.route('/services')
 def list_services():
-    apis = {'root': {'module': __name__,
-                     'rules': [rule.rule for rule in app_frontend.url_map.iter_rules()]}
+    apis = {'': {'module': __name__,
+                  'rules': [rule.rule for rule in app_frontend.url_map.iter_rules()]}
             }
-    for service in services:
-        info = {'module': service.__name__,
-                'rules': [rule.rule for rule in service.app.url_map.iter_rules()]}
-        apis[service.APP_NAME] = info
+    for (module, app_path, app) in services:
+        info = {'module': module.__name__,
+                'rules': [rule.rule for rule in app.url_map.iter_rules()]}
+        apis[app_path] = info
     return jsonify({'services': apis})
 
 
