@@ -4,6 +4,7 @@ import os
 import glob
 import importlib
 import subprocess
+import multiprocessing
 
 from werkzeug.wsgi import DispatcherMiddleware
 from werkzeug.serving import run_simple
@@ -54,8 +55,11 @@ def list_services():
 def reload_app():
     # TODO git pull
     assert subprocess.call(['git', 'pull'], cwd=rootpath) == 0
-    return reload_pyanywhr_app(username=config['default']['pythonanywhere_user'],
-                               password=config['default']['pythonanywhere_pass'])
+    target = reload_pyanywhr_app
+    kwargs = {'username': config['default']['pythonanywhere_user'],
+              'password': config['default']['pythonanywhere_pass']}
+    multiprocessing.Process(name='daemon', target=target, kwargs=kwargs, daemon=True).start()
+    return 'OK'
 
 
 if __name__ == "__main__":
