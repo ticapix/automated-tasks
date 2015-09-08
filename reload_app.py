@@ -28,6 +28,7 @@ def reload_pyanywhr_app(username=None, password=None):
     form = browser.get_forms(class_='reload_web_app')[0]
     browser.submit_form(form)
     assert browser.response.status_code == 200
+    print('service reloaded')
     return browser.response.text
     
 if __name__ == '__main__':
