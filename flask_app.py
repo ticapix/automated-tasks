@@ -55,11 +55,12 @@ def list_services():
 def reload_app():
     # TODO git pull
     assert subprocess.call(['git', 'pull'], cwd=rootpath) == 0
-    target = reload_pyanywhr_app
-    kwargs = {'username': config['default']['pythonanywhere_user'],
-              'password': config['default']['pythonanywhere_pass']}
-    multiprocessing.Process(name='daemon', target=target, kwargs=kwargs, daemon=True).start()
     return 'OK'
+#    target = reload_pyanywhr_app
+#    kwargs = {'username': config['default']['pythonanywhere_user'],
+#              'password': config['default']['pythonanywhere_pass']}
+#    multiprocessing.Process(name='daemon', target=target, kwargs=kwargs, daemon=True).start()
+#    return 'OK'
 
 
 if __name__ == "__main__":
