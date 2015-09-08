@@ -32,7 +32,11 @@ def forward_call():
 
 @app.route('/call_auth', methods=['GET', 'POST'])
 def call_auth():
+    account_sid = request.values.get('AccountSid', None)
+    if account_sid != config['twilio']['account_sid']:
+        return str(twiml.Response())
     resp = twiml.Response()
-    resp.pause(length=3)
+    resp.pause(length=5)
     resp.play(digits=config['twilio']['auth_code'])
+    resp.pause(length=5)
     return str(resp)
