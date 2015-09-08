@@ -34,6 +34,8 @@ def forward_call():
 def call_auth():
     if account_sid != request.values.get('AccountSid', None):
         return str(twiml.Response())
+    if config['twilio']['auth_from_number'] != request.values.get('From', None):
+        return str(twiml.Response())
     resp = twiml.Response()
     resp.pause(length=5)
     resp.play(digits=config['twilio']['auth_code'])
