@@ -9,9 +9,14 @@ from werkzeug.serving import run_simple
 
 from flask import Flask, jsonify, redirect, url_for
 
+from reload_app import reload_pyanywhr_app
+from config import config, rootpath
 
-rootpath = os.path.abspath(os.path.dirname(__file__))
+# Frontend service
+app_frontend = Flask(__name__, static_folder = None)
+app_frontend.debug = True
 
+# Backend services
 def get_services(rootpath):
     modules = glob.glob(os.path.join(rootpath, '*', '__init__.py'))
     for module_path in [os.path.dirname(module) for module in modules]:
@@ -21,11 +26,6 @@ def get_services(rootpath):
         module.app.debug = True
         yield (module, '/' + module.APP_NAME, module.app)
 
-# Frontend service
-app_frontend = Flask(__name__, static_folder = None)
-app_frontend.debug = True
-
-# Backend services
 services = list(get_services(rootpath))
 
 # application dispatcher
@@ -47,6 +47,13 @@ def list_services():
                 'rules': [rule.rule for rule in app.url_map.iter_rules()]}
         apis[app_path] = info
     return jsonify({'services': apis})
+
+
+@app_frontend.route('/reload', methods=['GET', 'POST'])
+def reload_app():
+    # TODO git pull
+    return reload_pyanywhr_app(username=config['default']['pythonanywhere_user'],
+                               password=config['default']['pythonanywhere_pass'])
 
 
 if __name__ == "__main__":
